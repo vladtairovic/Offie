@@ -1,0 +1,8 @@
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { people } from '../server/seed.mjs';
+mkdirSync('public/assets',{recursive:true});
+const skins=['#e4af83','#b97751','#edc5a5','#945c40','#d2a17c','#c18b62'];
+const hairs=['#40302b','#343230','#653e2a','#704b31','#25262a'];
+const shirts=['#417b77','#395e7a','#b77755','#8b7956','#847295','#bb8755'];
+people.forEach((p,i)=>{if(i===4)return;const skin=skins[i%skins.length],hair=hairs[i%hairs.length],shirt=shirts[i%shirts.length],long=[0,2,5,7,9,11,13,15,17,19].includes(i);const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${p[4]}"/><circle cx="77" cy="14" r="35" fill="#fff" opacity=".12"/>${long?`<path d="M24 84V42C24 7 76 7 76 42V87Z" fill="${hair}"/>`:''}<path d="M12 108Q14 76 41 74L59 74Q88 76 91 108" fill="${shirt}"/><path d="M40 65V80Q50 91 60 80V65" fill="${skin}"/><ellipse cx="50" cy="48" rx="23" ry="28" fill="${skin}"/><path d="M26 47Q20 17 47 16Q76 13 75 46L68 36Q48 42 39 29Q34 41 26 47" fill="${hair}"/><ellipse cx="40" cy="48" rx="2" ry="2.6" fill="#36312d"/><ellipse cx="60" cy="48" rx="2" ry="2.6" fill="#36312d"/><path d="M44 62Q50 67 57 61" fill="none" stroke="#81523b" stroke-width="2" stroke-linecap="round"/><path d="M50 50L48 56H52" fill="none" stroke="#9b6c52" stroke-width="1.5" stroke-linecap="round"/>${i%4===1?'<g fill="none" stroke="#3b4444" stroke-width="2"><rect x="31" y="42" width="16" height="12" rx="4"/><rect x="53" y="42" width="16" height="12" rx="4"/><path d="M47 46H53"/></g>':''}${long?`<path d="M25 37Q19 58 27 84L34 71L31 34" fill="${hair}"/>`:''}</svg>`;writeFileSync(`public/assets/avatar-${i+1}.svg`,svg);});
+console.log('19 avatares vetoriais locais criados. Mascote oficial preservado.');
