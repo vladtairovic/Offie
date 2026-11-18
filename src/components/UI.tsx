@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { ArrowUpRight, Check, Moon, Sun, Wifi, X } from 'lucide-react';
+import { ArrowUpRight, Check, Moon, Sun, X } from 'lucide-react';
 import { mascot } from '../api';
 import type { User } from '../types';
 
-export function Brand({ small = false }: { small?: boolean }) { return <span className={`brand ${small ? 'brand-small' : ''}`} aria-label="Offie"><span className="brand-symbol"><Wifi size={23} strokeWidth={3}/></span>offie<span className="brand-dot">.</span></span>; }
+export function Brand({ small = false }: { small?: boolean }) { return <span className={`brand ${small ? 'brand-small' : ''}`} aria-label="Offie"><img className="offie-wordmark" src="/assets/offie-logo.png" alt="Offie"/></span>; }
 export function Avatar({ user, size = '', onClick }: { user: User; size?: string; onClick?: () => void }) { const content = <img src={user.avatar} alt={user.name} draggable={false}/>; return onClick ? <button className={`avatar ${size}`} style={{ background: user.color }} onClick={onClick} aria-label={`Ver perfil de ${user.name}`}>{content}</button> : <span className={`avatar ${size}`} style={{ background: user.color }}>{content}</span>; }
 export function Verified() { return <span className="verified" title="Conta oficial"><Check size={10} strokeWidth={4}/></span>; }
 export function ThemeButton({ dark, toggle }: { dark: boolean; toggle: () => void }) { return <button className="icon-button theme-toggle" onClick={toggle} aria-label={dark ? 'Ativar tema claro' : 'Ativar tema escuro'}>{dark ? <Sun size={21}/> : <Moon size={21}/>}</button>; }
 export function Connection({ connected }: { connected: boolean }) { return <span className={`connection ${connected ? '' : 'disconnected'}`}><span className="status-dot"/>{connected ? 'Conectado ao campus' : 'Reconectando ao campus'}</span>; }
-export function Empty({ title, description, action }: { title: string; description: string; action?: ReactNode }) { return <div className="empty-state"><img src={mascot} alt="Offie está com você"/><h3>{title}</h3><p>{description}</p>{action}</div>; }
+export function Empty({ title, description, action, thinking = false }: { title: string; description: string; thinking?: boolean; action?: ReactNode }) { return <div className="empty-state"><img src={thinking ? "/assets/offie-thinking.png" : mascot} alt=""/><h3>{title}</h3><p>{description}</p>{action}</div>; }
 export function Modal({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {

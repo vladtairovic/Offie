@@ -21,8 +21,8 @@ async function setup(t, options = {}) {
   return { ...app, url, request, login, advance:ms => {time += ms;} };
 }
 
-test('20 contas e 40 publicações iniciais; PIN não é exposto e login inválido é recusado',async t => {
-  const s=await setup(t); const users=await s.request('/users'); assert.equal(users.data.length,20); assert.ok(users.data.some(u => u.handle==='offie' && u.avatar.includes('offie-mascot'))); assert.ok(users.data.every(u => !('pin' in u) && !('pin_hash' in u)));
+test('21 contas e 40 publicações iniciais; PIN não é exposto e login inválido é recusado',async t => {
+  const s=await setup(t); const users=await s.request('/users'); assert.equal(users.data.length,21); assert.ok(users.data.some(u => u.handle==='offie' && u.avatar.includes('offie-mascot'))); assert.ok(users.data.every(u => !('pin' in u) && !('pin_hash' in u)));
   assert.equal((await s.request('/login',{method:'POST',body:{userId:1,pin:'0000'}})).status,401);
   const token=await s.login(); const snap=await s.request('/snapshot',{token}); assert.equal(snap.data.posts.filter(p=>!p.parentId).length,40); assert.ok(snap.data.trends.length>=5); assert.ok(snap.data.notifications.length>0);
 });
@@ -87,4 +87,36 @@ test('SQLite mantém publicação e cooldown após reiniciar o servidor',async t
   const dir=await mkdtemp(join(tmpdir(),'offie-test-')); t.after(()=>rm(dir,{recursive:true,force:true})); const path=join(dir,'test.sqlite');
   const s=await setup(t,{dbPath:path}); const token=await s.login(1); const p=await s.request('/posts',{token,method:'POST',body:{text:'Persistência na LAN'}}); await s.request('/logout',{token,method:'POST'}); await s.close();
   const next=await setup(t,{dbPath:path}); assert.equal((await next.request('/login',{method:'POST',body:{userId:1,pin:'1234'}})).status,429); const other=await next.login(2); assert.ok((await next.request('/snapshot',{token:other})).data.posts.some(x=>x.id===p.data.id)); await next.close();
+});
+
+test('Vlad e Offie renovam o mesmo token após quatro minutos',async t=>{
+  const s=await setup(t);
+  const accounts=(await s.request('/users')).data;
+  for(const handle of ['vlad','offie']){
+    const user=accounts.find(u=>u.handle===handle);
+    const login=await s.request('/login',{method:'POST',body:{userId:user.id,pin:handle==='vlad'?'12345':'1234'}});
+    assert.equal(login.status,200);
+    s.advance(240000);
+    const renewed=await s.request('/session',{token:login.data.token});
+    assert.equal(renewed.status,200);
+    assert.equal(renewed.data.expiresAt-renewed.data.serverNow,240000);
+    assert.equal(renewed.data.token,login.data.token);
+  }
+});
+
+test('cadastro, perfil e moderação respeitam permissões',async t=>{
+  const s=await setup(t);
+  const body={name:'Alice',handle:'alice',course:'Design',bio:'Oi!',avatar:'/assets/portraits/avatar-2.png',pin:'54321',admin:true};
+  const created=await s.request('/accounts',{method:'POST',body});
+  assert.equal(created.status,201);assert.equal(!!created.data.admin,false);
+  assert.equal((await s.request('/accounts',{method:'POST',body})).status,409);
+  const id=created.data.id;
+  const token=(await s.request('/login',{method:'POST',body:{userId:id,pin:body.pin}})).data.token;
+  assert.equal((await s.request('/users/'+id,{token,method:'PATCH',body:{...body,bio:'Novo perfil'}})).data.bio,'Novo perfil');
+  assert.equal((await s.request('/users/1',{token,method:'PATCH',body})).status,403);
+  assert.equal((await s.request('/admin/posts/1',{token,method:'PATCH',body:{text:'Edição'}})).status,403);
+  const admin=await s.login(5);
+  assert.equal((await s.request('/admin/posts/1',{token:admin,method:'PATCH',body:{text:'Edição'}})).status,200);
+  assert.equal((await s.request('/admin/users/'+id,{token:admin,method:'DELETE'})).status,200);
+  assert.equal((await s.request('/session',{token})).status,401);
 });

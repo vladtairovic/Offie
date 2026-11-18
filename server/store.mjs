@@ -22,7 +22,7 @@ export function openStore(path, now) {
 }
 
 export function getUsers(db, viewer=0) {
-  return db.prepare(`SELECT u.id,u.name,u.handle,u.course,u.bio,u.color,u.avatar,u.official,
+  return db.prepare(`SELECT u.id,u.name,u.handle,u.course,u.bio,u.color,u.avatar,u.official,u.admin,
   (SELECT count(*) FROM follows WHERE following_id=u.id) as followers,
   (SELECT count(*) FROM follows WHERE follower_id=u.id) as following,
   (SELECT count(*) FROM posts WHERE user_id=u.id AND parent_id IS NULL) as posts,
